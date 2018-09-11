@@ -17,6 +17,14 @@ open class ContentScrollView: UIScrollView {
 
     fileprivate var options: SwipeMenuViewOptions.ContentScrollView = SwipeMenuViewOptions.ContentScrollView()
 
+    private var visiblePageViews: [Int: UIView] = [:]
+
+    /// previous page count to setup
+    private let previousBufferPageCount: Int = 1
+
+    /// next page count to setup
+    private let nextBufferPageCount: Int = 1
+
     public init(frame: CGRect, default defaultIndex: Int, options: SwipeMenuViewOptions.ContentScrollView? = nil) {
         super.init(frame: frame)
 
@@ -55,7 +63,9 @@ open class ContentScrollView: UIScrollView {
     }
 
     public func update(_ newIndex: Int) {
+        guard currentIndex != newIndex else { return }
         currentIndex = newIndex
+        setVisiblePageViews()
     }
 
     // MARK: - Setup
@@ -66,7 +76,8 @@ open class ContentScrollView: UIScrollView {
         if dataSource.numberOfPages(in: self) <= 0 { return }
 
         setupScrollView()
-        setupPages()
+        setupContainerPageViews()
+        setVisiblePageViews()
     }
 
     fileprivate func setupScrollView() {
@@ -83,7 +94,9 @@ open class ContentScrollView: UIScrollView {
         setContentOffset(.zero, animated: false)
     }
 
-    private func setupPages() {
+    /// setup empty containerView for `dataSource.numberOfPages(in:)`,
+    /// so that pageView is lazy added.
+    private func setupContainerPageViews() {
         pageViews = []
 
         guard let dataSource = dataSource, dataSource.numberOfPages(in: self) > 0 else { return }
@@ -91,32 +104,71 @@ open class ContentScrollView: UIScrollView {
         self.contentSize = CGSize(width: frame.width * CGFloat(dataSource.numberOfPages(in: self)), height: frame.height)
 
         for i in 0...currentIndex {
-            guard let pageView = dataSource.contentScrollView(self, viewForPageAt: i) else { return }
-            pageViews.append(pageView)
-            addSubview(pageView)
+            let containerView = UIView()
+            pageViews.append(containerView)
+            addSubview(containerView)
 
             let leadingAnchor = i > 0 ? pageViews[i - 1].trailingAnchor : self.leadingAnchor
-            pageView.translatesAutoresizingMaskIntoConstraints = false
+            containerView.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                pageView.topAnchor.constraint(equalTo: self.topAnchor),
-                pageView.widthAnchor.constraint(equalTo: self.widthAnchor),
-                pageView.heightAnchor.constraint(equalTo: self.heightAnchor),
-                pageView.leadingAnchor.constraint(equalTo: leadingAnchor)
+                containerView.topAnchor.constraint(equalTo: self.topAnchor),
+                containerView.widthAnchor.constraint(equalTo: self.widthAnchor),
+                containerView.heightAnchor.constraint(equalTo: self.heightAnchor),
+                containerView.leadingAnchor.constraint(equalTo: leadingAnchor)
             ])
         }
 
         guard currentIndex < dataSource.numberOfPages(in: self) else { return }
         for i in (currentIndex + 1)..<dataSource.numberOfPages(in: self) {
-            guard let pageView = dataSource.contentScrollView(self, viewForPageAt: i) else { return }
-            pageViews.append(pageView)
-            addSubview(pageView)
+            let containerView = UIView()
+            pageViews.append(containerView)
+            addSubview(containerView)
 
+            containerView.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                containerView.topAnchor.constraint(equalTo: self.topAnchor),
+                containerView.widthAnchor.constraint(equalTo: self.widthAnchor),
+                containerView.heightAnchor.constraint(equalTo: self.heightAnchor),
+                containerView.leadingAnchor.constraint(equalTo: pageViews[i - 1].trailingAnchor)
+            ])
+        }
+    }
+
+    /// lazy setup
+    /// - set current pageView and the buffered previous/next pageView
+    /// - remove outside pageView
+    private func setVisiblePageViews() {
+        guard let dataSource = self.dataSource else { return }
+        let previousPageIndex: Int = {
+            let i = currentIndex - previousBufferPageCount
+            return (i > 0) ? i : 0
+        }()
+        let nextPageIndex: Int = {
+            let i = currentIndex + nextBufferPageCount
+            let lastIndex = dataSource.numberOfPages(in: self) - 1
+            return (i > lastIndex) ? lastIndex : i
+        }()
+        let range = previousPageIndex...nextPageIndex
+
+        // remove pageView outside the range
+        for (index, pageView) in visiblePageViews where !range.contains(index) {
+            pageView.removeFromSuperview()
+            visiblePageViews.removeValue(forKey: index)
+        }
+
+        // add a newly included pageView
+        for index in range where visiblePageViews[index] == nil {
+            guard let pageView = dataSource.contentScrollView(self, viewForPageAt: index) else { return }
+            visiblePageViews[index] = pageView
+
+            let containerView = pageViews[index]
+            containerView.addSubview(pageView)
             pageView.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                pageView.topAnchor.constraint(equalTo: self.topAnchor),
-                pageView.widthAnchor.constraint(equalTo: self.widthAnchor),
-                pageView.heightAnchor.constraint(equalTo: self.heightAnchor),
-                pageView.leadingAnchor.constraint(equalTo: pageViews[i - 1].trailingAnchor)
+                pageView.topAnchor.constraint(equalTo: containerView.topAnchor),
+                pageView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+                pageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+                pageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
             ])
         }
     }
