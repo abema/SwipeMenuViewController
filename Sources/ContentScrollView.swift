@@ -25,6 +25,21 @@ open class ContentScrollView: UIScrollView {
     /// next page count to setup
     private let nextBufferPageCount: Int = 1
 
+    private var visiblePageViewRange: CountableClosedRange<Int>? {
+        let previousPageIndex: Int = {
+            let i = currentIndex - previousBufferPageCount
+            return max(i, 0)
+        }()
+        let nextPageIndex: Int = {
+            let i = currentIndex + nextBufferPageCount
+            let lastIndex = pageViews.count - 1
+            return min(lastIndex, i)
+        }()
+
+        guard nextPageIndex > previousPageIndex else { return nil }
+        return previousPageIndex...nextPageIndex
+    }
+
     public init(frame: CGRect, default defaultIndex: Int, options: SwipeMenuViewOptions.ContentScrollView? = nil) {
         super.init(frame: frame)
 
@@ -95,7 +110,7 @@ open class ContentScrollView: UIScrollView {
     }
 
     /// setup empty containerView for `dataSource.numberOfPages(in:)`,
-    /// so that pageView is lazy added.
+    /// so that pageView is lazily added.
     private func setupContainerPageViews() {
         pageViews = []
 
@@ -134,30 +149,21 @@ open class ContentScrollView: UIScrollView {
         }
     }
 
-    /// lazy setup
+    /// lazily setup
     /// - set current pageView and the buffered previous/next pageView
     /// - remove outside pageView
     private func setVisiblePageViews() {
         guard let dataSource = self.dataSource else { return }
-        let previousPageIndex: Int = {
-            let i = currentIndex - previousBufferPageCount
-            return (i > 0) ? i : 0
-        }()
-        let nextPageIndex: Int = {
-            let i = currentIndex + nextBufferPageCount
-            let lastIndex = dataSource.numberOfPages(in: self) - 1
-            return (i > lastIndex) ? lastIndex : i
-        }()
-        let range = previousPageIndex...nextPageIndex
+        guard let visiblePageViewRange = visiblePageViewRange else { return }
 
         // remove pageView outside the range
-        for (index, pageView) in visiblePageViews where !range.contains(index) {
+        for (index, pageView) in visiblePageViews where !visiblePageViewRange.contains(index) {
             pageView.removeFromSuperview()
             visiblePageViews.removeValue(forKey: index)
         }
 
-        // add a newly included pageView
-        for index in range where visiblePageViews[index] == nil {
+        // add newly included pageViews
+        for index in visiblePageViewRange where visiblePageViews[index] == nil {
             guard let pageView = dataSource.contentScrollView(self, viewForPageAt: index) else { return }
             visiblePageViews[index] = pageView
 
