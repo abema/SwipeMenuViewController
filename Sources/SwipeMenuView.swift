@@ -277,6 +277,8 @@ open class SwipeMenuView: UIView {
         if currentIndex != index {
             delegate?.swipeMenuView(self, willChangeIndexFrom: currentIndex, to: index)
         }
+
+        isJumping = true
         jumpingToIndex = index
 
         tabView.jump(to: index)
