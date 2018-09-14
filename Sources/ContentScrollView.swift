@@ -19,9 +19,6 @@ open class ContentScrollView: UIScrollView {
 
     private var visiblePageViews: [Int: UIView] = [:]
 
-    /// next page count to setup
-    private let nextBufferPageCount: Int = 1
-
     private var visiblePageViewRange: CountableClosedRange<Int>? {
         let previousPageIndex: Int = {
             let i = currentIndex - options.preloadingPageCount
