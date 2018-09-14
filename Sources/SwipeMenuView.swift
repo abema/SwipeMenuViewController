@@ -119,6 +119,9 @@ public struct SwipeMenuViewOptions {
 
         /// ContentScrollView enable safeAreaLayout. Defaults to `true`.
         public var isSafeAreaEnabled: Bool = true
+
+        /// ContentScrollView preloading previous/next page count. Defaults to `1`.
+        public var preloadingPageCount: Int = 1
     }
 
     /// TabView and ContentScrollView Enable safeAreaLayout. Defaults to `true`.

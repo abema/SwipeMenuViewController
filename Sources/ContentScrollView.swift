@@ -19,19 +19,16 @@ open class ContentScrollView: UIScrollView {
 
     private var visiblePageViews: [Int: UIView] = [:]
 
-    /// previous page count to setup
-    private let previousBufferPageCount: Int = 1
-
     /// next page count to setup
     private let nextBufferPageCount: Int = 1
 
     private var visiblePageViewRange: CountableClosedRange<Int>? {
         let previousPageIndex: Int = {
-            let i = currentIndex - previousBufferPageCount
+            let i = currentIndex - options.preloadingPageCount
             return max(i, 0)
         }()
         let nextPageIndex: Int = {
-            let i = currentIndex + nextBufferPageCount
+            let i = currentIndex + options.preloadingPageCount
             let lastIndex = pageViews.count - 1
             return min(lastIndex, i)
         }()
