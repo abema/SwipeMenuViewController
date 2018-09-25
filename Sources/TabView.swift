@@ -370,7 +370,7 @@ extension TabView {
         jump(to: currentIndex)
     }
 
-    private func updateAdditionViewPosition(index: Int) {
+    private func updateAdditionViewPosition(index: Int, animated: Bool) {
         guard let target = currentItem else { return }
 
         additionView.frame.origin.x = target.frame.origin.x + options.additionView.padding.left
@@ -380,7 +380,7 @@ extension TabView {
             additionView.frame.size.width = cellWidth - options.additionView.padding.horizontal
         }
 
-        focus(on: target)
+        focus(on: target, animated: animated)
     }
 
     fileprivate func resetAdditionViewPosition(index: Int) {
@@ -404,10 +404,10 @@ extension TabView {
 
         if animated {
             UIView.animate(withDuration: options.additionView.animationDuration, animations: {
-                self.updateAdditionViewPosition(index: index)
+                self.updateAdditionViewPosition(index: index, animated: animated)
             }, completion: completion)
         } else {
-            updateAdditionViewPosition(index: index)
+            updateAdditionViewPosition(index: index, animated: animated)
         }
     }
 
