@@ -71,9 +71,9 @@ open class TabView: UIScrollView {
     open override func safeAreaInsetsDidChange() {
         super.safeAreaInsetsDidChange()
 
-        leftMarginConstraint.constant = options.margin + safeAreaInsets.left
+        leftMarginConstraint.constant = options.padding.left + safeAreaInsets.left
         if options.style == .segmented {
-            widthConstraint.constant = options.margin * -2 - safeAreaInsets.left - safeAreaInsets.right
+            widthConstraint.constant = -options.padding.horizontal - safeAreaInsets.left - safeAreaInsets.right
         }
 
         layoutIfNeeded()
@@ -87,11 +87,11 @@ open class TabView: UIScrollView {
         let contentWidth: CGFloat
 
         if #available(iOS 11.0, *), options.isSafeAreaEnabled {
-            offset = target.center.x + options.margin + safeAreaInsets.left - self.frame.width / 2
-            contentWidth = containerView.frame.width + options.margin * 2 + safeAreaInsets.left + safeAreaInsets.right
+            offset = target.center.x + options.padding.left + safeAreaInsets.left - self.frame.width / 2
+            contentWidth = containerView.frame.width + options.padding.horizontal + safeAreaInsets.left + safeAreaInsets.right
         } else {
-            offset = target.center.x + options.margin - self.frame.width / 2
-            contentWidth = containerView.frame.width + options.margin * 2
+            offset = target.center.x + options.padding.left - self.frame.width / 2
+            contentWidth = containerView.frame.width + options.padding.horizontal
         }
 
         if offset < 0 || self.frame.width > contentWidth {
@@ -182,19 +182,26 @@ open class TabView: UIScrollView {
         case .flexible:
             let containerWidth = options.itemView.width * CGFloat(itemCount)
             if #available(iOS 11.0, *), options.isSafeAreaEnabled {
-                contentSize = CGSize(width: containerWidth + options.margin * 2 + safeAreaInsets.left + safeAreaInsets.right, height: options.height)
-                containerView.frame = CGRect(x: 0, y: options.margin + safeAreaInsets.left, width: containerWidth, height: containerHeight)
+                contentSize = CGSize(width: containerWidth + options.padding.horizontal + safeAreaInsets.left + safeAreaInsets.right,
+                                     height: options.height)
+                containerView.frame = CGRect(x: 0,
+                                             y: options.padding.top + options.padding.left + safeAreaInsets.left,
+                                             width: containerWidth,
+                                             height: containerHeight)
             } else {
-                contentSize = CGSize(width: containerWidth + options.margin * 2, height: options.height)
-                containerView.frame = CGRect(x: 0, y: options.margin, width: containerWidth, height: containerHeight)
+                contentSize = CGSize(width: containerWidth + options.padding.horizontal, height: options.height)
+                containerView.frame = CGRect(x: 0, y: options.padding.top + options.padding.left, width: containerWidth, height: containerHeight)
             }
         case .segmented:
             if #available(iOS 11.0, *), options.isSafeAreaEnabled {
                 contentSize = CGSize(width: frame.width, height: options.height)
-                containerView .frame = CGRect(x: 0, y: options.margin + safeAreaInsets.left, width: frame.width - options.margin * 2 - safeAreaInsets.left - safeAreaInsets.right, height: containerHeight)
+                containerView.frame = CGRect(x: 0,
+                                             y: (options.padding.top + options.padding.left) + safeAreaInsets.left,
+                                             width: frame.width - options.padding.horizontal - safeAreaInsets.left - safeAreaInsets.right,
+                                             height: containerHeight)
             } else {
                 contentSize = CGSize(width: frame.width, height: options.height)
-                containerView .frame = CGRect(x: 0, y: options.margin, width: frame.width - options.margin * 2, height: containerHeight)
+                containerView.frame = CGRect(x: 0, y: (options.padding.top + options.padding.left), width: frame.width - options.padding.horizontal, height: containerHeight)
             }
         }
 
@@ -227,7 +234,7 @@ open class TabView: UIScrollView {
             case .flexible:
                 if options.needsAdjustItemViewWidth {
                     var adjustCellSize = tabItemView.frame.size
-                    adjustCellSize.width = tabItemView.titleLabel.sizeThatFits(containerView.frame.size).width + options.itemView.margin * 2
+                    adjustCellSize.width = tabItemView.titleLabel.sizeThatFits(containerView.frame.size).width + options.itemView.padding * 2
                     tabItemView.frame.size = adjustCellSize
 
                     containerView.addArrangedSubview(tabItemView)
@@ -245,9 +252,11 @@ open class TabView: UIScrollView {
             case .segmented:
                 let adjustCellSize: CGSize
                 if #available(iOS 11.0, *), options.isSafeAreaEnabled {
-                    adjustCellSize = CGSize(width: (frame.width - options.margin * 2 - safeAreaInsets.left - safeAreaInsets.right) / CGFloat(itemCount), height: tabItemView.frame.size.height)
+                    adjustCellSize = CGSize(width: (frame.width - options.padding.horizontal - safeAreaInsets.left - safeAreaInsets.right) / CGFloat(itemCount),
+                                            height: tabItemView.frame.size.height)
                 } else {
-                    adjustCellSize = CGSize(width: (frame.width - options.margin * 2) / CGFloat(itemCount), height: tabItemView.frame.size.height)
+                    adjustCellSize = CGSize(width: (frame.width - options.padding.horizontal) / CGFloat(itemCount),
+                                            height: tabItemView.frame.size.height)
                 }
                 tabItemView.frame.size = adjustCellSize
 
@@ -273,7 +282,7 @@ open class TabView: UIScrollView {
 
         containerView.frame.size.width = containerWidth
         containerView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         let heightConstraint: NSLayoutConstraint
         switch options.addition {
         case .underline:
@@ -285,40 +294,40 @@ open class TabView: UIScrollView {
         switch options.style {
         case .flexible:
             if #available(iOS 11.0, *), options.isSafeAreaEnabled {
-                leftMarginConstraint = containerView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.margin + safeAreaInsets.left)
+                leftMarginConstraint = containerView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.padding.left + safeAreaInsets.left)
 
                 NSLayoutConstraint.activate([
-                    containerView.topAnchor.constraint(equalTo: self.topAnchor),
+                    containerView.topAnchor.constraint(equalTo: self.topAnchor, constant: options.padding.top),
                     leftMarginConstraint,
                     containerView.widthAnchor.constraint(equalToConstant: containerWidth),
                     heightConstraint
                     ])
-                contentSize.width = containerWidth + options.margin * 2 + safeAreaInsets.left - safeAreaInsets.right
+                contentSize.width = containerWidth + options.padding.horizontal + safeAreaInsets.left - safeAreaInsets.right
             } else {
-                leftMarginConstraint = containerView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.margin)
+                leftMarginConstraint = containerView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.padding.left)
                 NSLayoutConstraint.activate([
-                    containerView.topAnchor.constraint(equalTo: self.topAnchor),
+                    containerView.topAnchor.constraint(equalTo: self.topAnchor, constant: options.padding.top),
                     leftMarginConstraint,
                     containerView.widthAnchor.constraint(equalToConstant: containerWidth),
                     heightConstraint
                     ])
-                contentSize.width = containerWidth + options.margin * 2
+                contentSize.width = containerWidth + options.padding.horizontal
             }
         case .segmented:
             if #available(iOS 11.0, *), options.isSafeAreaEnabled {
-                leftMarginConstraint = containerView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.margin + safeAreaInsets.left)
-                widthConstraint = containerView.widthAnchor.constraint(equalTo: self.widthAnchor, constant: options.margin * -2 - safeAreaInsets.left - safeAreaInsets.right)
+                leftMarginConstraint = containerView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.padding.left + safeAreaInsets.left)
+                widthConstraint = containerView.widthAnchor.constraint(equalTo: self.widthAnchor, constant: -options.padding.horizontal - safeAreaInsets.left - safeAreaInsets.right)
                 NSLayoutConstraint.activate([
-                    containerView.topAnchor.constraint(equalTo: self.topAnchor),
+                    containerView.topAnchor.constraint(equalTo: self.topAnchor, constant: options.padding.top),
                     leftMarginConstraint,
                     widthConstraint,
                     heightConstraint
                     ])
             } else {
-                leftMarginConstraint = containerView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.margin)
-                widthConstraint = containerView.widthAnchor.constraint(equalTo: self.widthAnchor, constant: options.margin * -2)
+                leftMarginConstraint = containerView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.padding.left)
+                widthConstraint = containerView.widthAnchor.constraint(equalTo: self.widthAnchor, constant: -options.padding.horizontal)
                 NSLayoutConstraint.activate([
-                    containerView.topAnchor.constraint(equalTo: self.topAnchor),
+                    containerView.topAnchor.constraint(equalTo: self.topAnchor, constant: options.padding.top),
                     leftMarginConstraint,
                     widthConstraint,
                     heightConstraint
@@ -351,13 +360,20 @@ extension TabView {
         switch options.addition {
         case .underline:
             let itemView = itemViews[currentIndex]
-            additionView = UIView(frame: CGRect(x: itemView.frame.origin.x + options.additionView.padding.left, y: itemView.frame.height - options.additionView.padding.vertical, width: itemView.frame.width - options.additionView.padding.horizontal, height: options.additionView.underline.height))
+            let itemHeight = options.height - options.additionView.underline.height - options.additionView.padding.bottom
+            additionView = UIView(frame: CGRect(x: itemView.frame.origin.x + options.additionView.padding.left,
+                                                y: itemHeight - options.additionView.padding.vertical,
+                                                width: itemView.frame.width - options.additionView.padding.horizontal,
+                                                height: options.additionView.underline.height))
             additionView.backgroundColor = options.additionView.backgroundColor
             containerView.addSubview(additionView)
         case .circle:
             let itemView = itemViews[currentIndex]
             let height = itemView.bounds.height - options.additionView.padding.vertical
-            additionView = UIView(frame: CGRect(x: itemView.frame.origin.x + options.additionView.padding.left, y: 0, width: itemView.frame.width - options.additionView.padding.horizontal, height: height))
+            additionView = UIView(frame: CGRect(x: itemView.frame.origin.x + options.additionView.padding.left,
+                                                y: 0,
+                                                width: itemView.frame.width - options.additionView.padding.horizontal,
+                                                height: height))
             additionView.layer.position.y = itemView.layer.position.y
             additionView.layer.cornerRadius = options.additionView.circle.cornerRadius ?? additionView.frame.height / 2
             additionView.backgroundColor = options.additionView.backgroundColor
@@ -389,9 +405,9 @@ extension TabView {
             dataSource.numberOfItems(in: self) > 0 else { return }
         let adjustCellWidth: CGFloat
         if #available(iOS 11.0, *), options.isSafeAreaEnabled && safeAreaInsets != .zero {
-            adjustCellWidth = (frame.width - options.margin * 2 - safeAreaInsets.left - safeAreaInsets.right) / CGFloat(dataSource.numberOfItems(in: self)) - options.additionView.padding.horizontal
+            adjustCellWidth = (frame.width - options.padding.horizontal - safeAreaInsets.left - safeAreaInsets.right) / CGFloat(dataSource.numberOfItems(in: self)) - options.additionView.padding.horizontal
         } else {
-            adjustCellWidth = (frame.width - options.margin * 2) / CGFloat(dataSource.numberOfItems(in: self)) - options.additionView.padding.horizontal
+            adjustCellWidth = (frame.width - options.padding.horizontal) / CGFloat(dataSource.numberOfItems(in: self)) - options.additionView.padding.horizontal
         }
 
         additionView.frame.origin.x = adjustCellWidth * CGFloat(index) - options.additionView.padding.left
