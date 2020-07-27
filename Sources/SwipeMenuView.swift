@@ -21,8 +21,8 @@ public struct SwipeMenuViewOptions {
             /// ItemView width. Defaults to `100.0`.
             public var width: CGFloat = 100.0
 
-            /// ItemView side margin. Defaults to `5.0`.
-            public var margin: CGFloat = 5.0
+            /// ItemView side padding. Defaults to `5.0`.
+            public var padding: CGFloat = 5.0
 
             /// ItemView font. Defaults to `14 pt as bold SystemFont`.
             public var font: UIFont = UIFont.boldSystemFont(ofSize: 14)
@@ -38,12 +38,12 @@ public struct SwipeMenuViewOptions {
         }
 
         public struct AdditionView {
-            
+
             public struct Underline {
                 /// Underline height if addition style select `.underline`. Defaults to `2.0`.
                 public var height: CGFloat = 2.0
             }
-            
+
             public struct Circle {
                 /// Circle cornerRadius if addition style select `.circle`. Defaults to `nil`.
                 /// `AdditionView.height / 2` in the case of nil.
@@ -56,16 +56,16 @@ public struct SwipeMenuViewOptions {
 
             /// AdditionView paddings. Defaults to `.zero`.
             public var padding: UIEdgeInsets = .zero
-            
+
             /// AdditionView backgroundColor. Defaults to `.black`.
             public var backgroundColor: UIColor = .black
-            
+
             /// AdditionView animating duration. Defaults to `0.3`.
             public var animationDuration: Double = 0.3
 
             /// Underline style options.
             public var underline = Underline()
-            
+
             /// Circle style options.
             public var circle = Circle()
         }
@@ -73,8 +73,8 @@ public struct SwipeMenuViewOptions {
         /// TabView height. Defaults to `44.0`.
         public var height: CGFloat = 44.0
 
-        /// TabView side margin. Defaults to `0.0`.
-        public var margin: CGFloat = 0.0
+        /// TabView side padding. Defaults to `zero`.
+        public var padding: UIEdgeInsets = .zero
 
         /// TabView background color. Defaults to `.clear`.
         public var backgroundColor: UIColor = .clear
@@ -122,6 +122,9 @@ public struct SwipeMenuViewOptions {
 
         /// ContentScrollView preloading previous/next page count. Defaults to `1`.
         public var preloadingPageCount: Int = 1
+
+        /// ContentScrollView margin. Defaults to `zero`.
+        public var margin: UIEdgeInsets = .zero
     }
 
     /// TabView and ContentScrollView Enable safeAreaLayout. Defaults to `true`.
@@ -319,10 +322,10 @@ open class SwipeMenuView: UIView {
 
         backgroundColor = .clear
 
-        contentScrollView = ContentScrollView(frame: CGRect(x: 0, y: options.tabView.height, width: frame.width, height: frame.height - options.tabView.height), default: defaultIndex, options: options.contentScrollView)
+        contentScrollView = ContentScrollView(frame: .zero, default: defaultIndex, options: options.contentScrollView)
         contentScrollView?.clipsToBounds = options.contentScrollView.clipsToBounds
 
-        tabView = TabView(frame: CGRect(x: 0, y: 0, width: frame.width, height: options.tabView.height), options: options.tabView)
+        tabView = TabView(frame: .zero, options: options.tabView)
         tabView?.clipsToBounds = options.tabView.clipsToBounds
 
         tabView?.update(defaultIndex)
@@ -340,7 +343,7 @@ open class SwipeMenuView: UIView {
             tabView.topAnchor.constraint(equalTo: self.topAnchor),
             tabView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             tabView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            tabView.heightAnchor.constraint(equalToConstant: options.tabView.height)
+            tabView.heightAnchor.constraint(equalToConstant: options.tabView.height + options.tabView.padding.vertical)
             ])
     }
 
@@ -349,10 +352,10 @@ open class SwipeMenuView: UIView {
         contentScrollView.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            contentScrollView.topAnchor.constraint(equalTo: self.topAnchor, constant: options.tabView.height),
-            contentScrollView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
-            contentScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            contentScrollView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
+            contentScrollView.topAnchor.constraint(equalTo: self.topAnchor, constant: (options.tabView.height + options.tabView.padding.vertical) + options.contentScrollView.margin.top),
+            contentScrollView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: options.contentScrollView.margin.left),
+            contentScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: options.contentScrollView.margin.right),
+            contentScrollView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: options.contentScrollView.margin.bottom)
             ])
     }
 

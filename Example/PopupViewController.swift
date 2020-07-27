@@ -5,8 +5,8 @@ class PopupViewController: UIViewController {
 
     var options = SwipeMenuViewOptions() {
         didSet {
-            if tabMarginLabel != nil {
-                tabMarginLabel.text = "Tab Margin: \(String(format: "%.0f", Float(options.tabView.margin)))"
+            if tabPaddingLabel != nil {
+                tabPaddingLabel.text = "Tab Left Padding: \(String(format: "%.0f", Float(options.tabView.padding.left)))"
             }
 
             if tabItemViewWidthLabel != nil {
@@ -30,8 +30,8 @@ class PopupViewController: UIViewController {
 
     @IBOutlet weak var dataCountLabel: UILabel!
     @IBOutlet weak var dataCountStepper: UIStepper!
-    @IBOutlet weak var tabMarginLabel: UILabel!
-    @IBOutlet weak var tabMarginSlider: UISlider!
+    @IBOutlet weak var tabPaddingLabel: UILabel!
+    @IBOutlet weak var tabPaddingSlider: UISlider!
     @IBOutlet weak var styleSegmentedControl: UISegmentedControl!
     @IBOutlet weak var adjustTabItemLabel: UILabel!
     @IBOutlet weak var adjustTabItemSegmentedControl: UISegmentedControl!
@@ -45,8 +45,8 @@ class PopupViewController: UIViewController {
 
         dataCountLabel.text = "Page Number: \(dataCount)"
 
-        tabMarginLabel.text = "Tab Margin: \(String(format: "%.0f", Float(options.tabView.margin)))"
-        tabMarginSlider.setValue(Float(options.tabView.margin), animated: false)
+        tabPaddingLabel.text = "Tab Padding: \(String(format: "%.0f", Float(options.tabView.padding.left)))"
+        tabPaddingSlider.setValue(Float(options.tabView.padding.left), animated: false)
 
         dataCountStepper.value = Double(dataCount)
 
@@ -122,8 +122,10 @@ class PopupViewController: UIViewController {
         dataCount = Int(sender.value)
     }
 
-    @IBAction func changeTabMargin(_ sender: UISlider) {
-        options.tabView.margin = CGFloat(sender.value)
+    @IBAction func changeTabPadding(_ sender: UISlider) {
+        var padding = options.tabView.padding
+        padding.left = CGFloat(sender.value)
+        options.tabView.padding = padding
     }
 
     @IBAction func changeStyle(_ sender: UISegmentedControl) {
